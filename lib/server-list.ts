@@ -11,14 +11,14 @@ export const initialServers: ServerTypes[] = [
     name: "Atlas",
     server: "atlas_v2",
     status: "queue",
-    desc: "Alternative",
+    desc: "4K Support & Multi Audio",
   },
-  {
-    name: "Thanatos ",
-    server: "thanatos",
-    status: "queue",
-    desc: "Alternative",
-  },
+  // {
+  //   name: "Thanatos ",
+  //   server: "thanatos",
+  //   status: "queue",
+  //   desc: "Alternative",
+  // },
   {
     name: "Orion",
     server: "orion",
@@ -36,7 +36,7 @@ export const initialServers: ServerTypes[] = [
     name: "Athena",
     server: "athena",
     status: "queue",
-    desc: "Main Server",
+    desc: "Main Server & Multi Audio Support",
   },
 
   // {

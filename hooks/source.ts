@@ -235,6 +235,7 @@ async function fetchThanatosSource({
   );
 
   const proxies = [
+    "/backend/proxy/videasy/",
     "https://crimson-disk-c4aa.zxcprime368.workers.dev/",
     "https://damp-glitter-6277.zxcprime367.workers.dev/",
     // "https://billowing-king-b723.jerometecson33.workers.dev/",
