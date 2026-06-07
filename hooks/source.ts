@@ -236,12 +236,12 @@ async function fetchThanatosSource({
 
   const proxies = [
     "/backend/proxy/videasy/",
-    "https://crimson-disk-c4aa.zxcprime368.workers.dev/",
-    "https://damp-glitter-6277.zxcprime367.workers.dev/",
+    // "https://crimson-disk-c4aa.zxcprime368.workers.dev/",
+    // "https://damp-glitter-6277.zxcprime367.workers.dev/",
     // "https://billowing-king-b723.jerometecson33.workers.dev/",
-    "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
-    "https://morning-unit-723b.jinluxus303.workers.dev/",
-    "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
+    // "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
+    // "https://morning-unit-723b.jinluxus303.workers.dev/",
+    // "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
   ];
 
   // Step 4: Find working proxy client-side
