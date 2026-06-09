@@ -65,6 +65,7 @@ export function useVideoPlayer({
   enableSaveProgress = true, // ← new
   enableLoadProgress = true, // ← new
   load,
+  handleServerFail,
 }: {
   playerSrc: string | null;
   srcType: string;
@@ -74,6 +75,7 @@ export function useVideoPlayer({
   enableSaveProgress?: boolean; // ← new
   enableLoadProgress?: boolean; // ← new
   load?: number;
+  handleServerFail: () => void;
 }) {
   const [quality, setQuality] = useState<QualityLevel[]>([]);
   const [audioTracks, setAudioTracks] = useState<AudioTrackTypes[]>([]);
@@ -140,7 +142,11 @@ export function useVideoPlayer({
       hls.attachMedia(video);
 
       hlsRef.current = hls;
-
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          handleServerFail();
+        }
+      });
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         video.play().catch(() => {});
         setQuality(data.levels);

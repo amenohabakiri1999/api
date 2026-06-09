@@ -197,6 +197,7 @@ export default function Player() {
       enableSaveProgress,
       enableLoadProgress,
       load,
+      handleServerFail,
     });
 
   const { isVisible, resetTimer, setIsVisible, lockTimer } =
