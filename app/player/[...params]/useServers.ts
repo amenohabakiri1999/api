@@ -87,6 +87,18 @@ export function usePlayerServers({
       ),
     );
   }
+
+  function handleMarkDub() {
+    setServers((prev) =>
+      prev.map((s, i) =>
+        i === serverIndex && s.status === "available"
+          ? { ...s, status: "checking" }
+          : s,
+      ),
+    );
+
+    setPlayingIndex(null);
+  }
   function handleMarkQueue() {
     setServers((prev) =>
       prev.map((s, i) =>
@@ -96,6 +108,7 @@ export function usePlayerServers({
       ),
     );
   }
+
   function handleQualityChange() {
     setServers((prev) =>
       prev.map((s, i) =>
@@ -124,5 +137,6 @@ export function usePlayerServers({
     handleMarkQueue,
     allFailed,
     handleResetServers,
+    handleMarkDub,
   };
 }

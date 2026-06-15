@@ -20,6 +20,7 @@ import {
   Hd,
   Sun,
   Download,
+  Languages,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -28,7 +29,8 @@ export type DynamicKey =
   | "audioTracks"
   | "subtitles"
   | "sourceQualities"
-  | "downloads";
+  | "downloads"
+  | "dub";
 
 export type SettingsOption = {
   id: string;
@@ -82,6 +84,13 @@ export const groups: SettingsGroup[] = [
         Icon: Tv,
         options: [],
         dynamicKey: "sourceQualities",
+      },
+      {
+        label: "Audio Dub",
+        value: "Auto",
+        Icon: Languages,
+        options: [],
+        dynamicKey: "dub",
       },
       {
         label: "Download",

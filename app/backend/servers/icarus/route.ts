@@ -394,6 +394,12 @@ export async function GET(req: NextRequest) {
       file: c.url,
     }));
 
+    const activeDub =
+      (dubLang
+        ? dubs.find((d: any) => d.type === 0 && d.lanCode === dubLang)
+        : null) ??
+      dubs.find((d: any) => d.original === true) ??
+      dubs[0];
     logRequest(200, "OK!!!!!");
     return NextResponse.json({
       success: true,
@@ -406,8 +412,12 @@ export async function GET(req: NextRequest) {
           name: d.lanName.replace(/\b(dub|audio)\b/gi, "").trim(),
           original: d.original,
         })),
-      server: "icarus",
       meow: !!cached,
+      active: {
+        langCode: activeDub?.lanCode ?? "",
+        langName:
+          activeDub?.lanName?.replace(/\b(dub|audio)\b/gi, "").trim() ?? "",
+      },
     });
   } catch (err: any) {
     logRequest(500, `exception: ${err?.message}`);

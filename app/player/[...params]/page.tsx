@@ -48,6 +48,7 @@ export default function Player() {
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
   const color = searchParams.get("color") || "dc2626";
   const back = searchParams.get("back") === "true";
+  const dubLang = searchParams.get("dubLang");
   const auto_play = searchParams.get("autoplay") === "true";
   const enableSaveProgress = searchParams.get("save_progress") !== "false"; // default true
   const enableLoadProgress = searchParams.get("load_progress") !== "false"; // default true
@@ -80,6 +81,7 @@ export default function Player() {
   const brightness = useSettingsStore(
     (s) => s.values["Brightness"]?.id ?? "100%",
   );
+  const dub = useSettingsStore((s) => s.values["Audio Dub"]?.id ?? "");
 
   // ─── Servers ─────────────────────────────────────────────────────────────────
   const {
@@ -96,6 +98,7 @@ export default function Player() {
     playingIndex,
     allFailed,
     handleResetServers,
+    handleMarkDub,
   } = usePlayerServers({ defaultServerIndex });
 
   const fetchServer = servers[serverIndex];
@@ -167,6 +170,7 @@ export default function Player() {
     title,
     year,
     enable: !allFailed,
+    dub: dubLang ? dubLang : dub,
   });
 
   // ─── Subtitles ───────────────────────────────────────────────────────────────
@@ -175,7 +179,7 @@ export default function Player() {
     season: media_type === "tv" ? season : undefined,
     episode: media_type === "tv" ? episode : undefined,
   });
-
+  const dubs = source?.dubs || [];
   const mergeSubtitles = [...(source?.subtitles || []), ...openSubtitleData];
 
   // ─── Video Player ────────────────────────────────────────────────────────────
@@ -251,6 +255,24 @@ export default function Player() {
       handleServerFail();
     }
   }, [source?.links, sourceError]);
+  useEffect(() => {
+    if (!source?.active) return;
+    useSettingsStore.getState().setValue("Audio Dub", {
+      display: source.active.langName,
+      id: source.active.langCode,
+    });
+  }, [source?.links]);
+
+  useEffect(() => {
+    if (!source?.links?.[0]?.resolution) return;
+
+    useSettingsStore.getState().setValue("Source quality", {
+      display:
+        String(source.links[0].resolution) +
+        (source.links[0].resolution === 4 ? "K" : "p"),
+      id: "0",
+    });
+  }, [source?.links]);
 
   useEffect(() => {
     if (!source?.links) return;
@@ -283,6 +305,11 @@ export default function Player() {
     if (!source?.links) return;
     handleQualityChange();
   }, [sourceQualityId]);
+
+  useEffect(() => {
+    if (!dub) return;
+    handleMarkDub();
+  }, [dub]);
 
   useEffect(() => {
     if (canNext && state.ended) {
@@ -563,6 +590,7 @@ export default function Player() {
             quality={quality}
             audioTracks={audioTracks}
             mergeSubtitles={mergeSubtitles}
+            dubs={dubs}
             title={title}
             onPip={controls.togglePip}
             cCToggle={cCToggle}

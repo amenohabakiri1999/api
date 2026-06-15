@@ -17,7 +17,7 @@ import { formatTime } from "@/lib/format-time";
 import { motion } from "framer-motion";
 import Episodes from "../episodes";
 import { useRouter } from "next/navigation";
-import { QualityTrack } from "@/hooks/source";
+import { DubTypes, QualityTrack } from "@/hooks/source";
 import Link from "next/link";
 import { Cloud } from "lucide-react";
 import { CloudIcon } from "@/components/icons/cloud";
@@ -42,6 +42,7 @@ export interface VideoControlsProps {
   //
 
   mergeSubtitles: MediaOption[];
+  dubs: DubTypes[]
   //
   title: string;
   //
@@ -87,6 +88,7 @@ export default function MainControls({
   //
 
   mergeSubtitles,
+  dubs,
   //
 
   title,
@@ -299,6 +301,7 @@ export default function MainControls({
                 resetTimer={resetTimer}
                 lockTimer={lockTimer}
                 source={source}
+                dubs={dubs}
               />
               {media_type === "tv" && (
                 <Episodes

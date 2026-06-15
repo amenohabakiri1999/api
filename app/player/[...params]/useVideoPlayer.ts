@@ -172,6 +172,16 @@ export function useVideoPlayer({
           id: "auto",
         });
       });
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        const level = hls.levels[data.level];
+        if (level) {
+          const res = level.height;
+          useSettingsStore.getState().setValue("Quality", {
+            display: `${res}${res === 2160 ? "K" : "p"}`,
+            id: String(data.level),
+          });
+        }
+      });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (_, data) => {
         setAudioTracks(data.audioTracks);
         const first = data.audioTracks[0];
@@ -419,25 +429,16 @@ export function useVideoPlayer({
     setAudioTracks([]);
     useSettingsStore
       .getState()
-      .setValue("Source quality", { display: "Auto", id: "0" });
-    useSettingsStore
-      .getState()
       .setValue("Quality", { display: "Auto", id: "auto" });
     useSettingsStore
       .getState()
       .setValue("Audio track", { display: "Default", id: "0" });
-
     setState((p) => ({ ...p, canPlay: false, waiting: true, playing: false }));
-  }, [serverIndex]);
+  }, [serverIndex]); // immediate reset on server switch
 
   useEffect(() => {
-    setState((p) => ({
-      ...p,
-      canPlay: false,
-      waiting: true,
-      playing: false,
-    }));
-  }, [playerSrc]);
+    setState((p) => ({ ...p, canPlay: false, waiting: true, playing: false }));
+  }, [playerSrc]); // catches null → new url transition
 
   useEffect(() => {
     const video = videoRef.current;

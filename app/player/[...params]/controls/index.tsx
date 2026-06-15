@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { AudioTrackTypes, QualityLevel } from "../useVideoPlayer";
 import { SubtitleSettingsModal } from "./subtitle-settings";
-import { QualityTrack } from "@/hooks/source";
+import { DubTypes, QualityTrack } from "@/hooks/source";
 
 type ActiveItem = {
   item: SettingsItem;
@@ -40,6 +40,7 @@ export default function Settings({
   lockTimer,
 
   source,
+  dubs,
 }: {
   mergeSubtitles: MediaOption[];
 
@@ -61,6 +62,7 @@ export default function Settings({
   lockTimer: () => void;
 
   source: QualityTrack[];
+  dubs: DubTypes[];
 }) {
   const [subtitleSettings, setSubtitleSettings] = useState(false);
   const [open, setOpen] = useState(false);
@@ -84,7 +86,7 @@ export default function Settings({
   const { values, setValue } = useSettingsStore();
 
   const buttonRef = useRef<HTMLButtonElement>(null);
-  console.log("ddd", source);
+
   function handleSelect(label: string, option: SettingsOption) {
     setValue(label, {
       display: option.display,
@@ -96,6 +98,16 @@ export default function Settings({
 
   const resolvedGroups = useMemo(() => {
     const dynamic: Record<DynamicKey, SettingsOption[]> = {
+      //////////
+      dub:
+        dubs.length > 1
+          ? [
+              ...dubs.map((q, i) => ({
+                id: q.lang,
+                display: q.name,
+              })),
+            ]
+          : [],
       //////////
       downloads: source
         .filter((l) => l.type !== "hls")
@@ -167,6 +179,7 @@ export default function Settings({
           if (item.label === "Audio track")
             return dynamic.audioTracks.length > 0;
           if (item.label === "Download") return dynamic.downloads.length > 0;
+          if (item.label === "Audio Dub") return dynamic.downloads.length > 0;
           return true;
         }),
     }));

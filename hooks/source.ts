@@ -10,13 +10,23 @@ export interface QualityTrack {
   type: "mp4" | "hls";
   link: string;
 }
+export interface DubTypes {
+  lang: string;
+  name: string;
+  original: boolean;
+}
 
 export interface SourceTypes {
   success: boolean;
   links: QualityTrack[];
   subtitles: MediaOption[];
+  dubs?: DubTypes[];
+  active?: ActiveTypes;
 }
-
+export interface ActiveTypes {
+  langCode: string;
+  langName: string;
+}
 interface UseSourceParams {
   media_type: string;
   tmdbId: string;
@@ -27,6 +37,7 @@ interface UseSourceParams {
   title: string;
   year: string;
   quality?: "4k" | null;
+  dub: string;
   enable: boolean;
 }
 
@@ -43,6 +54,7 @@ export default function useSource(
     title,
     year,
     quality,
+    dub,
     enable,
   } = params;
 
@@ -58,6 +70,7 @@ export default function useSource(
       title,
       year,
       quality,
+      dub,
     ],
     enabled: Boolean(tmdbId && imdbId && server === server) && enable, // ← blocks fetch while scrolling
     retry: false,
@@ -67,17 +80,17 @@ export default function useSource(
     refetchOnReconnect: false,
     refetchIntervalInBackground: false,
     queryFn: async () => {
-      if (server === "thanatos") {
-        return fetchThanatosSource({
-          media_type,
-          tmdbId,
-          season,
-          episode,
-          imdbId,
-          title,
-          year,
-        });
-      }
+      // if (server === "thanatos") {
+      //   return fetchThanatosSource({
+      //     media_type,
+      //     tmdbId,
+      //     season,
+      //     episode,
+      //     imdbId,
+      //     title,
+      //     year,
+      //   });
+      // }
       const { xt, rt } = generateFrontendToken(String(tmdbId));
 
       const backendRes = await fetchBackendToken(tmdbId, xt, rt);
@@ -92,6 +105,7 @@ export default function useSource(
         imdbId,
         title,
         year,
+        dub,
         // quality,
         ts,
         sig,
@@ -124,6 +138,7 @@ interface BuildSourceURLParams {
   ts: number;
   sig: string; // was: token
   xt: string; // was: f_token
+  dub: string;
 }
 
 function buildSourceURL({
@@ -138,6 +153,7 @@ function buildSourceURL({
   ts,
   sig,
   xt,
+  dub,
 }: BuildSourceURLParams) {
   const params = new URLSearchParams({
     [FIELD_MAP.id]: String(tmdbId),
@@ -153,7 +169,9 @@ function buildSourceURL({
     params.append(FIELD_MAP.season, String(season));
     params.append(FIELD_MAP.episode, String(episode));
   }
-
+  if (dub) {
+    params.append("dub", dub);
+  }
   if (imdbId) {
     params.append(FIELD_MAP.imdbId, imdbId);
   }
@@ -167,94 +185,94 @@ function sleep(ms: number) {
 
 // videasy-2.zxcprime365.workers.dev
 
-async function fetchThanatosSource({
-  media_type,
-  tmdbId,
-  season,
-  episode,
-  title,
-  year,
-  imdbId,
-}: {
-  media_type: string;
-  tmdbId: string;
-  season: number;
-  episode: number;
-  imdbId: string | null;
-  title: string;
-  year: string;
-}): Promise<SourceTypes> {
-  // Step 1: Fetch encrypted source directly (user's IP)
-  const qs = new URLSearchParams({
-    title,
-    mediaType: media_type,
-    year,
-    tmdbId,
-  });
+// async function fetchThanatosSource({
+//   media_type,
+//   tmdbId,
+//   season,
+//   episode,
+//   title,
+//   year,
+//   imdbId,
+// }: {
+//   media_type: string;
+//   tmdbId: string;
+//   season: number;
+//   episode: number;
+//   imdbId: string | null;
+//   title: string;
+//   year: string;
+// }): Promise<SourceTypes> {
+//   // Step 1: Fetch encrypted source directly (user's IP)
+//   const qs = new URLSearchParams({
+//     title,
+//     mediaType: media_type,
+//     year,
+//     tmdbId,
+//   });
 
-  if (imdbId) {
-    qs.set("imdbId", imdbId);
-  }
+//   if (imdbId) {
+//     qs.set("imdbId", imdbId);
+//   }
 
-  if (media_type === "tv") {
-    qs.set("seasonId", String(season));
-    qs.set("episodeId", String(episode));
-  } else {
-    // Movies still need episodeId=1 and seasonId=1 per the example URL
-    qs.set("episodeId", "1");
-    qs.set("seasonId", "1");
-  }
+//   if (media_type === "tv") {
+//     qs.set("seasonId", String(season));
+//     qs.set("episodeId", String(episode));
+//   } else {
+//     // Movies still need episodeId=1 and seasonId=1 per the example URL
+//     qs.set("episodeId", "1");
+//     qs.set("seasonId", "1");
+//   }
 
-  const videasyRes = await axios.get(
-    `https://api.videasy.to/mb-flix/sources-with-title?${qs}`,
-    {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-        Referer: "https://videasy.to/",
-      },
-    },
-  );
+//   const videasyRes = await axios.get(
+//     `https://api.videasy.to/mb-flix/sources-with-title?${qs}`,
+//     {
+//       headers: {
+//         "User-Agent":
+//           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+//         Referer: "https://videasy.to/",
+//       },
+//     },
+//   );
 
-  // Step 2: Decrypt directly from browser (user's IP)
-  const decryptRes = await axios.post("https://enc-dec.app/api/dec-videasy", {
-    text: videasyRes.data,
-    id: tmdbId,
-  });
+//   // Step 2: Decrypt directly from browser (user's IP)
+//   const decryptRes = await axios.post("https://enc-dec.app/api/dec-videasy", {
+//     text: videasyRes.data,
+//     id: tmdbId,
+//   });
 
-  const sources = decryptRes.data?.result?.sources;
-  if (!Array.isArray(sources) || sources.length === 0) {
-    throw new Error("No stream found");
-  }
+//   const sources = decryptRes.data?.result?.sources;
+//   if (!Array.isArray(sources) || sources.length === 0) {
+//     throw new Error("No stream found");
+//   }
 
-  // Step 3: Still use backend only for proxy selection (no rate-limited calls here)
-  const finalM3u8 = encodeURIComponent(
-    sources.find((f: any) => f.quality === "1080p")?.url ??
-      sources.at(0)?.url ??
-      "",
-  );
+//   // Step 3: Still use backend only for proxy selection (no rate-limited calls here)
+//   const finalM3u8 = encodeURIComponent(
+//     sources.find((f: any) => f.quality === "1080p")?.url ??
+//       sources.at(0)?.url ??
+//       "",
+//   );
 
-  const proxies = [
-    "/backend/proxy/videasy/",
-    // "https://crimson-disk-c4aa.zxcprime368.workers.dev/",
-    // "https://damp-glitter-6277.zxcprime367.workers.dev/",
-    // "https://billowing-king-b723.jerometecson33.workers.dev/",
-    // "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
-    // "https://morning-unit-723b.jinluxus303.workers.dev/",
-    // "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
-  ];
+//   const proxies = [
+//     "/backend/proxy/videasy/",
+//     // "https://crimson-disk-c4aa.zxcprime368.workers.dev/",
+//     // "https://damp-glitter-6277.zxcprime367.workers.dev/",
+//     // "https://billowing-king-b723.jerometecson33.workers.dev/",
+//     // "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
+//     // "https://morning-unit-723b.jinluxus303.workers.dev/",
+//     // "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
+//   ];
 
-  // Step 4: Find working proxy client-side
-  const workingProxy = await getWorkingProxyClient(finalM3u8, proxies);
-  if (!workingProxy) throw new Error("No working proxy available");
+//   // Step 4: Find working proxy client-side
+//   const workingProxy = await getWorkingProxyClient(finalM3u8, proxies);
+//   if (!workingProxy) throw new Error("No working proxy available");
 
-  await sleep(1200);
-  return {
-    success: true,
-    links: [{ type: "hls", link: `${workingProxy}?m3u8-proxy=${finalM3u8}` }],
-    subtitles: [],
-  };
-}
+//   await sleep(1200);
+//   return {
+//     success: true,
+//     links: [{ type: "hls", link: `${workingProxy}?m3u8-proxy=${finalM3u8}` }],
+//     subtitles: [],
+//   };
+// }
 
 async function getWorkingProxyClient(
   url: string,
