@@ -191,17 +191,27 @@ export async function GET(req: NextRequest) {
         /\[(tagalog|hindi|dubbed|multi|spanish|french|arabic|korean|japanese|tamil|telugu)\]/i;
 
       const queryWords = normalizedTitle!.split(/\s+/).filter(Boolean);
+      const dateObj = date ? new Date(date) : null;
 
       const selectedItem = items.find((item: any) => {
         const itemTitle = item.title?.toLowerCase().replace(/-/g, " ") || "";
         const itemWords = itemTitle.split(/\s+/).filter(Boolean);
         const itemReleaseDate = item.releaseDate;
         if (LANG_TAGS.test(itemTitle)) return false;
-        if (itemReleaseDate?.slice(0, 7) !== date?.slice(0, 7)) return false;
+
+        if (!dateObj || !itemReleaseDate) return false;
+        const itemDate = new Date(itemReleaseDate);
+        const diff =
+          itemDate.getFullYear() * 12 +
+          itemDate.getMonth() -
+          (dateObj.getFullYear() * 12 + dateObj.getMonth());
+        if (Math.abs(diff) > 1) return false;
+
         if (queryWords.length <= 2 && itemWords.length !== queryWords.length)
           return false;
         return queryWords.every((word) => itemTitle.includes(word));
       });
+
       if (!selectedItem) {
         logRequest(404, "unavailable");
         return NextResponse.json(
